@@ -1,0 +1,317 @@
+{% extends "index.html" %}
+
+{% block content %}
+<!--begin::Content-->
+<div class="container-fluid mt-4" id="kt_content">
+    <!--begin::Post-->
+    <div class="post d-flex flex-column-fluid" id="kt_post">
+        <!--begin::Container-->
+        <div id="kt_content_container" class="container-fluid">
+            <div id="login-required" class="alert alert-danger" role="alert" style="display:none">
+                Please login to add a coin to watch list :/
+            </div>
+            <div id="add-success" class="alert alert-success" role="alert" style="display:none">
+                Coin is successfully added :)
+            </div>
+            <div id="add-failure" class="alert alert-danger" role="alert" style="display:none">
+                There is some error, please try again :/
+            </div>
+            <!--begin::Row-->
+            <div class="row">
+                <!--begin::Col-->
+                <div class="col-xl-8 col-md-6 col-12 col-sm-12">
+                    <div id="chartContainer" style="height: 400px; width: 100%;">
+                    </div>
+                    <div id="add-watchlist-button">
+                    </div>
+                </div>
+                <div class="col-xl-4 col-12  col-md-6 col-sm-12">
+                    <!--begin::List Widget 4-->
+
+                    <div class="card">
+                        <!--begin::Header-->
+                        <div class="card-header border-0 pt-5">
+                            <h3 class="card-title align-items-start">
+                                <span class="card-label fw-bolder text-dark">Watch List</span>
+                                <span class="text-muted mt-1 fw-bold fs-7">My favourite coins</span>
+                            </h3>
+                            <div class="card-toolbar">
+                                <!--begin::Menu-->
+                                <!--end::Menu-->
+                            </div>
+                        </div>
+                        <!--end::Header-->
+                        <!--begin::Body-->
+                        <div class="card-body pt-5">
+                            <div id="coin-delete-alert">
+
+                            </div>
+                            {% if current_user.is_authenticated %}
+                            <!--begin::Item-->
+                            <div id="my-watchlist">
+                            </div>
+                            <!--end::Item-->
+                            {% else %}
+                            <div id="login-required" class="alert alert-danger" role="alert">
+                                Please login to see your watchlist :/
+                            </div>
+                            {% endif %}
+                        </div>
+                        <!--end::Body-->
+                    </div>
+
+                    <!--end::List Widget 4-->
+
+                </div>
+                <!--end::Col-->
+            </div>
+            <!--end::Row-->
+        </div>
+        <!--end::Container-->
+    </div>
+    <!--end::Post-->
+</div>
+<!--end::Content-->
+<input type="hidden" id="my-coin" name="custId" value="">
+<input type="hidden" id="coin-price" value="">
+<script>
+    function remove_coin(coin_id) {
+        fetch('/remove-coin/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    coin: coin_id,
+                }),
+            })
+            .then(response => response.json())
+            .then(result => {
+                $("#coin-delete-alert").html('');
+                // Print result
+                console.log('result', result);
+                if (result["login"] === false) {
+                    $("#coin-delete-alert").append(`
+                     <div id="login-required" class="alert alert-danger" role="alert">
+                        Please login to delete your coin :/
+                     </div>                    
+                    `)
+
+                }
+                if (result["success"] === false) {
+                    $("#coin-delete-alert").append(`
+                    <div id="login-required" class="alert alert-danger" role="alert">
+                        There is some error, please try again :/
+                    </div>
+                    `)
+                }
+                if (result["success"] === true) {
+                    $("#coin-delete-alert").append(`
+                    <div id="login-required" class="alert alert-danger" role="alert">
+                        Coin has been removed from watchlist successfully :)
+                    </div>
+                    `)
+                }
+                r();
+            });
+    }
+
+    function add_watchlist() {
+        var coin = $("#my-coin").val();
+        fetch('/add-watchlist/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    coin: coin,
+                }),
+            })
+            .then(response => response.json())
+            .then(result => {
+                // Print result
+                $("#coin-delete-alert").html('');
+                if (result["login"] === false) {
+                    $("#coin-delete-alert").append(`
+                        <div id="login-required" class="alert alert-danger" role="alert">
+                            Please login to add coin :/
+                        </div>
+                        `)
+
+                }
+                if (result["success"] === false) {
+                    $("#coin-delete-alert").append(`
+                         <div id="login-required" class="alert alert-danger" role="alert">
+                             There is some error, please try again :)
+                         </div>
+                         `)
+                }
+                if (result["success"] === true) {
+                    $("#add-watchlist-button").html('');
+                    $("#coin-delete-alert").append(`
+                        <div id="login-required" class="alert alert-success" role="alert">
+                            Coin has been deleted successfully :)
+                        </div>
+                        `)
+                }
+                r();
+            });
+    }
+
+    function r() {
+        $('#my-watchlist').html('')
+
+        fetch('/get-watchlist/')
+            .then(response => response.json())
+            .then(result => {
+                if (Object.keys(result["watchlist"]).length === 0) {
+                    $("#my-watchlist").append(`
+                    <div id="login-required" class="alert alert-danger" role="alert">
+                        Your watchlist is empty :/
+                    </div>
+                    `)
+                }
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        Accept: 'application/json'
+                    }
+                };
+                if (Object.keys(result["watchlist"]).length !== 0) {
+                    for (i in result["watchlist"]) {
+                        var price
+                        fetch(
+                                `https://api.coingecko.com/api/v3/simple/price?ids=${result["watchlist"][i]}&vs_currencies=usd`,
+                                options)
+                            .then(raees =>
+                                raees.json()
+                            )
+                            .then(raees => {
+                                for (i in raees) {
+                                    for (ii in raees[i]) {
+                                        price = raees[i][ii];
+                                    }
+                                }
+
+                                $("#my-watchlist").append(`
+                         <div class="d-flex align-items-sm-center mb-7">
+                        <!--begin::Symbol-->
+                        <div class="symbol symbol-50px me-5">
+                            <span class="symbol-label">
+                                <img src="assets/media/svg/brand-logos/kickstarter.svg" class="h-50 align-self-center" alt="" />
+                            </span>
+                        </div>
+                        <!--end::Symbol-->
+                        <!--begin::Section-->
+                        <div class="d-flex align-items-center flex-row-fluid flex-wrap">
+                            <div class="flex-grow-1 me-2">
+                            <a onclick="search_coin('${i}')" href=" #"
+                                class="text-gray-800 text-hover-primary fs-6 fw-bolder">${i}</a>
+                            <span onclick="remove_coin('${i}' );" class="raees-span fw-bold d-block fs-7">
+                                remove from watch list
+                            </span>
+                        </div>
+                        <span  class="badge badge-light fw-bolder my-2">${price}$</span>
+                    </div>
+                    <!--end::Section-->
+                </div>
+                `)
+                            })
+
+                    }
+                }
+                // Print result
+            });
+    }
+
+    window.onload = function () {
+        r();
+        search_coin('bitcoin');
+        $("#my-watchlist").html('');
+    }
+
+
+    function search_coin(coin_id) {
+        $("#coin-delete-alert").html('');
+        $('#login-required').hide();
+        $('#add-failure').hide();
+        $('#add-success').hide();
+        let product_id = coin_id;
+        $("#my-coin").val(product_id);
+        var dataPoints = [];
+        var chart = new CanvasJS.Chart("chartContainer", {
+            animationEnabled: true,
+            theme: "dark2", // "light1", "light2", "dark1", "dark2"
+            exportEnabled: false,
+            title: {
+                text: `${product_id} chart`
+            },
+            subtitles: [{
+                text: "It shows the data from coingeco"
+            }],
+            toolTip: {
+                content: "Date: {x}<br /><strong>Price:</strong><br />Open: {y[0]}, Close: {y[3]}<br />High: {y[1]},Low:{y[2]}"
+
+            },
+            data: [{
+                type: "candlestick",
+                yValueFormatString: "$##0.00",
+                dataPoints: dataPoints
+            }]
+        });
+
+        const options = {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json'
+            }
+        };
+        fetch(
+                `https://api.coingecko.com/api/v3/coins/${product_id}/ohlc?vs_currency=usd&days=7`,
+                options)
+            .then(response =>
+                response.json()
+            )
+            .then(response => {
+                for (i in response) {
+                    for (ii in response[i]) {
+                        dataPoints.push({
+                            x: new Date(
+                                parseInt(response[i][0])
+                            ),
+                            y: [
+                                parseFloat(response[i][1]),
+                                parseFloat(response[i][2]),
+                                parseFloat(response[i][3]),
+                                parseFloat(response[i][4])
+                            ]
+                        });
+                    }
+                }
+                chart.render();
+                console.log(response)
+            })
+            .catch(err => {
+                $("#my-coin").hide();
+                console.error(err);
+            });
+
+        fetch('/check-coin/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    coin: coin_id,
+                }),
+            })
+            .then(response => response.json())
+            .then(result => {
+                $("#add-watchlist-button").html('');
+                // Print result
+                if (result["find"] === false) {
+                    $("#add-watchlist-button").append(`
+                    <button class="btn btn-sm btn-dark w-100 mt-2" onclick="add_watchlist();"> add to watch list </button>
+             `)
+                }
+            });
+    }
+    $("#coin_id").keyup(function () {
+        if (event.keyCode === 13) {
+            let product_id = $('#coin_id').val();
+            search_coin(product_id);
+        }
+    });
+</script>
+{% endblock content %}
