@@ -10,12 +10,10 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = "5791628bb0b13ce0c676dfde280ba245"
 
 ##Add your db seetings here
-app.config[
-    "SQLALCHEMY_DATABASE_URI"
-] = "postgresql://irene:@localhost/crypto"
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://irene:@localhost:5432/crypto"
 
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+migrate = Migrate(app, db, compare_type=True)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
