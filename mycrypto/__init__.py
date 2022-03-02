@@ -12,7 +12,7 @@ app.config["SECRET_KEY"] = "5791628bb0b13ce0c676dfde280ba245"
 ##Add your db seetings here
 app.config[
     "SQLALCHEMY_DATABASE_URI"
-] = "postgresql://rootuser-here:password-here@localhost/dbname-here"
+] = "postgresql://irene:@localhost/crypto"
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
