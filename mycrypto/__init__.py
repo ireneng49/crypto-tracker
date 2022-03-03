@@ -7,12 +7,9 @@ from flask_mail import Mail
 import os
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get('SECRET_KEY','hellosecret1')
-print('******************')
-print('******************')
-print('******************')
-
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://irene:@localhost:5432/crypto"
+app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "flask_secret")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "postgresql:///crypto")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db, compare_type=True)
